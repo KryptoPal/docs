@@ -17,10 +17,10 @@ allprojects {
             credentials {  
                 username 'kryptopalreadonlyusers'  
                 password 'eyJ2ZXIiOiIyIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYiLCJraWQiOiJTSC1CbmdqNXU4WWdXM0V0cVZmYjR0dms0SlUtblY5QTQzdExXYk1lTkEwIn0.eyJzdWIiOiJqZnJ0QDAxYzRiNDlwcWVtanZ3MTdna3Y2Z2MwNHQ2XC91c2Vyc1wva3J5cHRvcGFscmVhZG9ubHl1c2VycyIsInNjcCI6Im1lbWJlci1vZi1ncm91cHM6a3J5cHRvcGFsdGVzdHJlYWRlciBhcGk6KiIsImF1ZCI6ImpmcnRAMDFjNGI0OXBxZW1qdncxN2drdjZnYzA0dDYiLCJpc3MiOiJqZnJ0QDAxYzRiNDlwcWVtanZ3MTdna3Y2Z2MwNHQ2IiwiaWF0IjoxNTIzMjIzNTU1LCJqdGkiOiI2MjZmN2EwNC05NTQ1LTQwMmUtODQxZC1hNzYwZDU3MTJiYzMifQ.V02lskXhT2W1Fj3M1Ir1P69BZzZ1L3T2iiwnum4p7klqTmKPmpZihI8U5OUI3SCI1cKvWTFCDkAWZJtuC6CSd4EpjFH3SyurR22cSSaxjWvZO7AKuGeF3mi6db9HtVCbnz85-flguyM_9MljXDzQDKFszenNhRLHotuQPIB3zP3X6eta9C60YBGAiNMPklB-o9jfCE6IebGvIVM_Yn47Lhty1Blb2Cs2VstFbtr_s1kmItcA2sw864Q-Kk3a0EbEAu6fFR_kF3EZXi7-9lnzSOPCq2VIhncqUpooedjnCnzOigP2nhQ61_j703zqVkQa51MS5Cy9emHlDZiOk6G7LA'  
-  }  
+            }  
   
             url "https://kryptopal.jfrog.io/kryptopal/kryptopal-maven-public-repo/"  
-  }  
+        }  
     }  
 }
 ```
