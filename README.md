@@ -18,7 +18,6 @@ allprojects {
                 username 'kryptopalreadonlyusers'  
                 password 'eyJ2ZXIiOiIyIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYiLCJraWQiOiJTSC1CbmdqNXU4WWdXM0V0cVZmYjR0dms0SlUtblY5QTQzdExXYk1lTkEwIn0.eyJzdWIiOiJqZnJ0QDAxYzRiNDlwcWVtanZ3MTdna3Y2Z2MwNHQ2XC91c2Vyc1wva3J5cHRvcGFscmVhZG9ubHl1c2VycyIsInNjcCI6Im1lbWJlci1vZi1ncm91cHM6a3J5cHRvcGFsdGVzdHJlYWRlciBhcGk6KiIsImF1ZCI6ImpmcnRAMDFjNGI0OXBxZW1qdncxN2drdjZnYzA0dDYiLCJpc3MiOiJqZnJ0QDAxYzRiNDlwcWVtanZ3MTdna3Y2Z2MwNHQ2IiwiaWF0IjoxNTIzMjIzNTU1LCJqdGkiOiI2MjZmN2EwNC05NTQ1LTQwMmUtODQxZC1hNzYwZDU3MTJiYzMifQ.V02lskXhT2W1Fj3M1Ir1P69BZzZ1L3T2iiwnum4p7klqTmKPmpZihI8U5OUI3SCI1cKvWTFCDkAWZJtuC6CSd4EpjFH3SyurR22cSSaxjWvZO7AKuGeF3mi6db9HtVCbnz85-flguyM_9MljXDzQDKFszenNhRLHotuQPIB3zP3X6eta9C60YBGAiNMPklB-o9jfCE6IebGvIVM_Yn47Lhty1Blb2Cs2VstFbtr_s1kmItcA2sw864Q-Kk3a0EbEAu6fFR_kF3EZXi7-9lnzSOPCq2VIhncqUpooedjnCnzOigP2nhQ61_j703zqVkQa51MS5Cy9emHlDZiOk6G7LA'  
             }  
-  
             url "https://kryptopal.jfrog.io/kryptopal/kryptopal-maven-public-repo/"  
         }  
     }  
@@ -94,7 +93,7 @@ kryptopalTransaction.value = valueInEther.toString() // Convert BigDecimal to a 
 
 val call = kpxService.getUnsignedKryptopalTransactionUsingPOST(kryptopalTransaction)  
 call.enqueue(object: Callback<Any>{  
-	override fun onFailure(call: Call<Any>?, t: Throwable?) {}
+    override fun onFailure(call: Call<Any>?, t: Throwable?) {}
     override fun onResponse(call: Call<Any>?, response: Response<Any>?) {}  
 })
 ```
@@ -109,7 +108,7 @@ override fun onResponse(call: Call<Any>?, response: Response<Any>?) {
         listener.onSuccess(jsonObject!!.from, jsonObject.to, jsonObject.gas, jsonObject.gasPrice, jsonObject.value, jsonObject.data, jsonObject.nonce)
         // better listener.onSuccess(unsignedTransactionData)
     } else {  
-		// handle error scenario
+        // handle error scenario
     }  
 }
 ```
@@ -156,8 +155,6 @@ val txnData = Numeric.toHexString(signedByteArray)
 ```
 
 ### Checking the transaction receipt
-
-##  RPC Methods
 
 ## Ticker Info
 For your convenience Kryptopal provides the ability to query various sources for ticker information, however we currently we only support CoinMarketCap.
@@ -235,4 +232,55 @@ The request will return JSON containing information about the ticker
     "24h_volume_eur": "771867696.572"
   }
 ]
+```
+
+##  RPC Methods
+[Geth RPC](https://github.com/ethereum/wiki/wiki/JSON-RPC) Methods allow you to interact with the Geth node. This can be helpful when trying to check an account balance, check a nonce value, send a signed transaction. 
+
+#### Here is an example of checking an accounts balance using the Geth RPC method [eth_getBalance](https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getbalance)
+In order to make an RPC request you need to provide three fields
+
+ 1. `ID` an arbitrary integer to track the request
+ 2. `method` the name of the RPC method you wish to call
+ 3. `params` the params the Geth RPC api specifies for the `method`
+
+Take note that the RPC method `eth_getBalance` takes the following parameters
+ 1.  `DATA`, 20 Bytes - address to check for balance.
+ 2.  `QUANTITY|TAG`  - integer block number, or the string  `"latest"`,  `"earliest"`  or  `"pending"`
+```
+val rpcService = ApiClient().createService(JsonrpcApi::class.java)  
+val rpcbody = JSONRPCRequest()  
+rpcbody.id = "0"  
+rpcbody.method = "eth_getBalance"  
+rpcbody.params = listOf(account.address.hex.toString(), "latest")  
+  
+val call = rpcService.v1JsonrpcNetworkPOSTUsingPOST("kryptopal", rpcbody)  
+call.enqueue(object: Callback<Any> {  
+    override fun onFailure(call: Call<Any>?, t: Throwable?) { }
+    override fun onResponse(call: Call<Any>?, response: Response<Any>?) { }
+})
+```
+Parsing the response can be done using Moshi and Web3J provides convenient methods to convert the result's hex representation of the balance in Wei to an ether amount in decimal.
+```
+{	// example response
+  "id":1,
+  "jsonrpc": "2.0",
+  "result": "0x0234c8a3397aab58" // 158972490234375000
+}
+```
+```
+override fun onResponse(call: Call<Any>?, response: Response<Any>?) {
+    if (response!!.isSuccessful) {
+        data class RpcResponse(val id: String, val jsonrpc: String, val result: String)
+        val jsonAdapter = Moshi.Builder().build().adapter(RpcResponse::class.java)
+        val jsonObject = jsonAdapter.fromJson(Gson().toJson(response.body()))
+        val etherDecimal = Convert.fromWei(
+                BigDecimal(Numeric.toBigInt(jsonObject!!.result)),
+                Convert.Unit.ETHER
+        )
+        listener.onSuccess(etherDecimal.toPlainString())
+    } else {
+        Timber.d("error body: ${response.errorBody()!!.string()}")
+    }
+}
 ```
