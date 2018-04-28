@@ -76,12 +76,12 @@ val credentials = WalletUtils.loadCredentials(password, walletFile)
 ##  Send a transaction
 To send a transaction using the Kryptopal api you need to
 
- - Send a request to `/v1/jsonrpc/sendKryptopalTransaction` specifying:
+ - Send a request to `/v1/jsonrpc/getUnsignedKryptopalTransaction` specifying:
 	 - From address
 	 - To address
 	 - Value (in Ether)
  - Sign the transaction specified in the response
- - Send the signed transaction through the network using `/v1/jsonrpc/sendSignedKryptopalTransactionUsingPOST`
+ - Send the signed transaction through the network using the Geth RPC method `eth_sendRawTransaction`
  
  Let's go through this process one step at a time. Kryptopal's java client uses retrofit2 in order to make its network requests. 
 ```
@@ -93,7 +93,7 @@ kryptopalTransaction.value = valueInEther.toString() // Convert BigDecimal to a 
 
 val call = kpxService.getUnsignedKryptopalTransactionUsingPOST(kryptopalTransaction)  
 call.enqueue(object: Callback<Any>{  
-    override fun onFailure(call: Call<Any>?, t: Throwable?) {}
+	override fun onFailure(call: Call<Any>?, t: Throwable?) {}
     override fun onResponse(call: Call<Any>?, response: Response<Any>?) {}  
 })
 ```
@@ -106,9 +106,9 @@ override fun onResponse(call: Call<Any>?, response: Response<Any>?) {
         val unsignedTransactionData= jsonAdapter.fromJson(Gson().toJson(response.body()))  
   
         listener.onSuccess(jsonObject!!.from, jsonObject.to, jsonObject.gas, jsonObject.gasPrice, jsonObject.value, jsonObject.data, jsonObject.nonce)
-        // better listener.onSuccess(unsignedTransactionData)
+        // better, listener.onSuccess(unsignedTransactionData)
     } else {  
-        // handle error scenario
+		// handle error scenario
     }  
 }
 ```
@@ -129,17 +129,19 @@ val signedTransaction = Numeric.toHexString(signedByteArray)
 ```
 Now that we have signed the transaction the user is able post that transaction to the Kryptopal network.
 ```
-val kpxService = kryptopalClient.createService(JsonrpcApi::class.java)  
-val signedTransaction = SignedTransaction()  
-signedTransaction.data = signedTransaction
-val call = kpxService.sendSignedKryptopalTransactionUsingPOST(signedTransaction)
-  
+val kpxService = ApiClient().createService(JsonrpcApi::class.java)  
+val rpcbody = JSONRPCRequest()  
+rpcbody.id = "0"  
+rpcbody.method = "eth_sendRawTransaction"  
+rpcbody.params = listOf(signedMessage)  
+val call = kpxService.v1JsonrpcNetworkPOSTUsingPOST("kryptopal", rpcbody)  
+
 call.enqueue(object: Callback<Any> {  
-    override fun onFailure(call: Call<Any>?, t: Throwable?) { }
+    override fun onFailure(call: Call<Any>?, t: Throwable?) { }  
     override fun onResponse(call: Call<Any>?, response: Response<Any>?) { }  
 })
 ```
-And that's all there is to it. `sendSignedKryptopalTransactionUsingPOST` will return the transaction receipt.
+And that's all there is to it. The RPC request will return the transaction receipt.
  
 
 ### Transaction Signing
@@ -153,8 +155,6 @@ val credentials = WalletUtils.loadCredentials(password, walletFile)
 val signedByteArray = TransactionEncoder.signMessage(transactionW3, credentials)  // Signing happens here
 val txnData = Numeric.toHexString(signedByteArray)
 ```
-
-### Checking the transaction receipt
 
 ## Ticker Info
 For your convenience Kryptopal provides the ability to query various sources for ticker information, however we currently we only support CoinMarketCap.
